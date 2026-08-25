@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM ubuntu:24.04
 
 # Install paket dasar dan dependencies
 RUN apt-get update && apt-get install -y \
@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     neofetch tmux fail2ban ufw openssh-server \
     supervisor net-tools iptables gnupg2 \
     lsb-release dnsutils tree bash-completion \
-    python3.11-venv php php-curl php-cli coreutils \
+    python3-venv php php-curl php-cli coreutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 22.1.0
