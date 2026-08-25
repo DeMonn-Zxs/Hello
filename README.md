@@ -7,7 +7,7 @@ This server auto installed *Python3.11 + NodeJS 22.14.0 + PHP8.2.28*
 ### **1. Clone the repository
 
 ```bash
-git clone https://github.com/rayyanghazi/ghazi-fly.git
+git clone https://github.com/Nur4ik00p/ghazi-fly.git
 cd ghazi-fly
 ```
 
@@ -47,6 +47,7 @@ fly logs -a ghazi-fly
 ## 📝 **Notes**
 ✅ Port 2222  
 ✅ SSH command : ssh -p 2222 ghazi@your-ip-address  
+✅ SSH password in : hello11
 ✅ Extend volume : fly vol extend volume_xxxx --size 10gb  
 
 If you encounter issues or have questions, feel free to ask! 🚀  
