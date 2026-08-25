@@ -47,7 +47,6 @@ fly logs -a ghazi-fly
 ## 📝 **Notes**
 ✅ Port 2222  
 ✅ SSH command : ssh -p 2222 ghazi@your-ip-address  
-✅ SSH password in : hello11
-✅ Extend volume : fly vol extend volume_xxxx --size 10gb  
+✅ SSH password in : ```hello11```
 
 If you encounter issues or have questions, feel free to ask! 🚀  
