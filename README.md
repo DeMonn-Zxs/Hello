@@ -46,7 +46,7 @@ fly logs -a ghazi-fly
 
 ## 📝 **Notes**
 ✅ Port 2222  
-✅ SSH command : ssh -p 2222 ghazi@your-ip-address  
-✅ SSH password in : ```hello11```
+✅ SSH command : ssh -p 2222 root@your-ip-address  
+✅ SSH password in : ```HARD_PASSWORD```
 
 If you encounter issues or have questions, feel free to ask! 🚀  
