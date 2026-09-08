@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     python3-venv php php-curl php-cli coreutils \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 22.1.0
+# Install Node.js 22
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs && \
     node -v
@@ -26,7 +26,7 @@ ENV LC_ALL en_US.UTF-8
 # Konfigurasi SSH
 RUN mkdir -p /root/.ssh && \
     chmod 700 /root/.ssh && \
-    mkdir /var/run/sshd && \
+    mkdir -p /var/run/sshd && \
     chmod 755 /var/run/sshd
 
 COPY sshd_config /etc/ssh/sshd_config
@@ -38,10 +38,10 @@ RUN rm -f /etc/ssh/ssh_host_* && \
     mkdir -p /ghazi && \
     chmod 777 /ghazi
 
-# Buat user ghazi
-RUN mkdir -p /ghazi && \
-    useradd -m -s /bin/bash -d /ghazi ghazi && \
-    echo "ghazi:hello11" | chpasswd && \
+# Buat user ghazi и пароли
+RUN useradd -m -s /bin/bash -d /ghazi ghazi && \
+    echo "ghazi:HARD_PASSWORD" | chpasswd && \
+    echo "root:HARD_PASSWORD" | chpasswd && \
     usermod -aG sudo ghazi && \
     echo "ghazi ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && \
     chown -R ghazi:ghazi /ghazi
@@ -60,23 +60,17 @@ RUN echo '#!/bin/bash' > /etc/update-motd.d/99-flyio && \
 RUN apt-get update && apt-get install -y logrotate cron && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy konfigurasi logrotate yang benar
 COPY logrotate.conf /etc/logrotate.d/custom_logs
 RUN chmod 644 /etc/logrotate.d/custom_logs
 
-# Setup cronjob untuk bersihin /tmp setiap jam
+# Setup cronjob
 RUN echo "0 * * * * root rm -rf /tmp/* /var/tmp/* /root/.cache" >> /etc/crontab && \
     chmod 644 /etc/crontab
 
-
 COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Setup volume untuk kunci SSH persisten
 VOLUME ["/ghazi"]
 
-# Setup entrypoint
-RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
-
-# Default command (jika diperlukan)
 CMD []
