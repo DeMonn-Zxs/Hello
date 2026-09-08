@@ -1,60 +1,80 @@
 #!/bin/bash
 set -e
 
-# Generate SSH keys jika belum ada
+# Подготовка папки ghazi
 mkdir -p /ghazi
-chmod 777 /ghazi
+usermod -d /ghazi ghazi 2>/dev/null || true
 
-# Buat .bash_profile jika belum ada
+# Папка для постоянного хранения ключей хоста
+mkdir -p /ghazi/.ssh_host_keys
+
+# Создание .bash_profile, если его нет
+echo "cd /ghazi" >> /root/.bashrc
+source ~/.bashrc
+
 if [ ! -f /ghazi/.bash_profile ]; then
-    cat << EOF > /ghazi/.bash_profile
-# Load .bashrc jika ada
+    cat << 'EOF' > /ghazi/.bash_profile
 if [ -f ~/.bashrc ]; then
     source ~/.bashrc
 fi
-
-# Alias contoh
 alias ll="ls -lah"
 EOF
 fi
 
-# Tambahkan custom prompt untuk ghazi
-echo 'export PS1="\[\e[32m\][ghaziverse] \[\e[36m\]\u@\h:\w\$ \[\e[m\]"' >> /ghazi/.bashrc
-
-chown -R ghazi:ghazi /ghazi
-
-if [ ! -f /ghazi/ssh_host_ed25519_key ]; then
-  echo "Generating new SSH host keys..."
-  ssh-keygen -A >/dev/null
-  cp /etc/ssh/ssh_host_* /ghazi/
+# Настройка prompt
+if ! grep -q "ghaziverse" /ghazi/.bashrc 2>/dev/null; then
+    echo 'export PS1="\[\e[32m\][ghaziverse] \[\e[36m\]\u@\h:\w\$ \[\e[m\]"' >> /ghazi/.bashrc
 fi
 
-# Link keys dari volume
-rm -f /etc/ssh/ssh_host_*
-ln -sf /ghazi/* /etc/ssh/
-
-# Setup authorized_keys
+# Настройка ключей SSH для root
 mkdir -p /root/.ssh
 if [ -n "$AUTHORIZED_KEYS" ]; then
-  echo "$AUTHORIZED_KEYS" > /root/.ssh/authorized_keys
-  chmod 600 /root/.ssh/authorized_keys
+    echo "$AUTHORIZED_KEYS" > /root/.ssh/authorized_keys
+fi
+chown -R root:root /root
+chmod 700 /root
+chmod 700 /root/.ssh
+if [ -f /root/.ssh/authorized_keys ]; then
+    chmod 600 /root/.ssh/authorized_keys
 fi
 
-# Start SSH dengan opsi eksplisit
-echo "Starting SSH server..."
-exec /usr/sbin/sshd -D -o "ListenAddress 0.0.0.0:2222" -e
+# Настройка ключей SSH и прав для ghazi
+mkdir -p /ghazi/.ssh
+if [ -n "$AUTHORIZED_KEYS" ]; then
+    echo "$AUTHORIZED_KEYS" > /ghazi/.ssh/authorized_keys
+fi
+chown -R ghazi:ghazi /ghazi
+chmod -R 775 /ghazi
+chmod 700 /ghazi/.ssh
+if [ -f /ghazi/.ssh/authorized_keys ]; then
+    chmod 600 /ghazi/.ssh/authorized_keys
+fi
 
-# Token & Chat ID Telegram (ganti dengan punyamu)
+# Генерация постоянных хост-ключей, если их ещё нет на томе
+if [ ! -f /ghazi/.ssh_host_keys/ssh_host_ed25519_key ]; then
+    echo "Generating new SSH host keys..."
+    ssh-keygen -A >/dev/null
+    cp /etc/ssh/ssh_host_* /ghazi/.ssh_host_keys/
+fi
+
+# Копирование хост-ключей в системную директорию с правами 0600
+cp -f /ghazi/.ssh_host_keys/ssh_host_* /etc/ssh/
+chown root:root /etc/ssh/ssh_host_*
+chmod 600 /etc/ssh/ssh_host_*_key
+chmod 644 /etc/ssh/ssh_host_*_key.pub
+
+# Уведомление в Telegram (отправляется ДО запуска sshd)
 TELEGRAM_BOT_TOKEN="YOUR_BOT_TOKEN"
 TELEGRAM_CHAT_ID="YOUR_CHAT_ID"
-#MESSAGE_THREAD_ID="3"  # ID topik di super grup
+HOSTNAME_URL="https://${FLY_APP_NAME}.fly.dev"
 
-# Ambil hostname Fly.io
-HOSTNAME_URL="https://$FLY_APP_NAME.fly.dev"
+if [ "$TELEGRAM_BOT_TOKEN" != "YOUR_BOT_TOKEN" ] && [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d "chat_id=${TELEGRAM_CHAT_ID}" \
+        -d "text=🚀 Server di Fly.io aktif! Hostname: ${HOSTNAME_URL}" \
+        -d "parse_mode=Markdown" || true
+fi
 
-# Kirim notifikasi ke Telegram
-curl -s -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-    -d "chat_id=$TELEGRAM_CHAT_ID" \
-    #-d "message_thread_id=$MESSAGE_THREAD_ID" \
-    -d "text=🚀 Server di Fly.io aktif! Hostname: $HOSTNAME_URL" \
-    -d "parse_mode=Markdown"
+# Запуск SSH сервера
+echo "Starting SSH server on port 2222..."
+exec /usr/sbin/sshd -D -o "ListenAddress 0.0.0.0:2222" -e
