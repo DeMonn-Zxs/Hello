@@ -4,7 +4,7 @@
 #
 
 app = 'ghazian'
-primary_region = 'cdg'
+primary_region = 'sin'
 
 [build]
   dockerfile = 'Dockerfile'
