@@ -12,7 +12,7 @@ primary_region = 'cdg'
 [[mounts]]
   source = 'ghazi'
   destination = '/ghazi'
-  initial_size = '320gb'
+  initial_size = '220gb'
 
 [[services]]
   protocol = 'tcp'
@@ -22,9 +22,9 @@ primary_region = 'cdg'
     port = 2222
 
 [[vm]]
-  memory = '32gb'
+  memory = '16gb'
   cpu_kind = 'shared'
-  cpus = 16
-  memory_mb = 32768
+  cpus = 8
+  memory_mb = 16384
 
   
